@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+  <div>
+    <span class="eyebrow">MANAGER WORKSPACE</span>
+    <h1>McDo Scheduling Dashboard</h1>
+    <p>Review requests, catch consecutive-day risks, and find recommended crew for the next schedule.</p>
+  </div>
+  <form class="datepicker" method="get">
+    <label>Check schedule date <input type="date" name="day" value="{{selected_day}}"></label>
+    <button class="primary" type="submit">Check Date</button>
+  </form>
+</div>
+
+<div class="metrics">
+  <div class="metric"><span>Active Crew</span><strong>{{people | selectattr('active') | list | length}}</strong></div>
+  <div class="metric"><span>Pending Requests</span><strong>{{pending}}</strong></div>
+  <div class="metric"><span>Scheduled on Date</span><strong>{{assignments|length}}</strong></div>
+  <div class="metric dangermetric"><span>6th / 7th+ Day Alerts</span><strong>{{alerts|length}}</strong></div>
+</div>
+
+{% if alerts %}
+<div class="alert"><b>⚠ Consecutive-day alert:</b> {% for a in alerts %}{{a.name}} (Day {{a.streak}}){% if not loop.last %}, {% endif %}{% endfor %}. Consider a rest day or assign another available crew member.</div>
+{% endif %}
+
+<div class="two">
+  <section class="panel">
+    <div class="sectiontitle">
+      <div>
+        <h2>Roster for {{selected_day}}</h2>
+        <p>Add assignments from the existing schedule. Day count is automatic.</p>
+      </div>
+    </div>
+    <form method="post" action="/admin/shift" class="inlineform">
+      <input type="hidden" name="day" value="{{selected_day}}">
+      <select name="crew_id" required>
+        <option value="">Select crew to schedule</option>
+        {% for p in people if p.active %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
+      </select>
+      <button class="primary">+ Add Shift</button>
+    </form>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Crew</th><th>Streak</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for a in assignments %}
+          <tr>
+            <td><b>{{a.name}}</b><small>{{a.role}}</small></td>
+            <td>{{a.streak}} day{{'s' if a.streak!=1 else ''}}</td>
+            <td>
+              {% if a.streak>=7 %}<span class="pill red">Day 7+</span>
+              {% elif a.streak==6 %}<span class="pill orange">Day 6</span>
+              {% else %}<span class="pill green">Normal</span>{% endif %}
+            </td>
+            <td>
+              <form method="post" action="/admin/shift/{{a.id}}/delete">
+                <input type="hidden" name="day" value="{{selected_day}}">
+                <button class="linkbutton">Remove</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="muted">No shifts recorded for this date.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Recommended Crew</h2>
+    <p>Not assigned or approved off on {{selected_day}}. Preferred candidates would be below their 6th consecutive day.</p>
+    <div class="candidate-list">
+      {% for r in recommended %}
+      <div class="candidate">
+        <div><b>{{r.name}}</b><small>{{r.role}} · If assigned: Day {{r.new_streak}}</small></div>
+        {% if r.safe %}<span class="pill green">Recommended</span>{% else %}<span class="pill orange">Caution</span>{% endif %}
+      </div>
+      {% else %}
+      <p class="muted">No available crew found. Add crew or adjust assignments.</p>
+      {% endfor %}
+    </div>
+    <p class="footnote">Suggestions only consider entered shifts, active status, and approved days off. Skills, rest hours, and legal rules still require manager verification.</p>
+  </section>
+</div>
+
+<section class="panel section">
+  <div class="sectiontitle">
+    <div>
+      <h2>Crew Requests</h2>
+      <p>Review each crew member's request. Approval does not automatically change assignments.</p>
+    </div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Crew</th><th>Type</th><th>Day</th><th>Details</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for r in requests %}
+        <tr>
+          <td><b>{{r.name}}</b><small>{{r.created_at}}</small></td>
+          <td>{{r.kind}}</td>
+          <td>{{r.day}}</td>
+          <td>{{r.reason}}{% if r.target_name %}<small>With: {{r.target_name}}</small>{% endif %}</td>
+          <td><span class="pill {{'orange' if r.status=='Pending' else 'green' if r.status=='Approved' else 'red'}}">{{r.status}}</span></td>
+          <td>
+            <form method="post" action="/admin/request/{{r.id}}/status" class="actions">
+              <select name="status">
+                <option {{'selected' if r.status=='Pending'}} value="Pending">Pending</option>
+                <option {{'selected' if r.status=='Approved'}} value="Approved">Approved</option>
+                <option {{'selected' if r.status=='Rejected'}} value="Rejected">Rejected</option>
+              </select>
+              <button class="secondary">Save</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td class="muted" colspan="6">No requests yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="two section">
+  <section class="panel">
+    <h2>Manage Crew</h2>
+    <p>Register crew members so they can submit requests and be checked for schedule risks.</p>
+    <form method="post" action="/admin/crew" class="inlineform crewadd">
+      <input name="name" placeholder="Crew full name" maxlength="120" required>
+      <input name="role" placeholder="Role (e.g. Service)" maxlength="80">
+      <button class="primary">+ Add Crew</button>
+    </form>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>Availability</th><th></th></tr></thead>
+        <tbody>
+          {% for p in people %}
+          <tr>
+            <td>{{p.name}}</td>
+            <td>{{p.role}}</td>
+            <td>{{'Active' if p.active else 'Inactive'}}</td>
+            <td><form method="post" action="/admin/crew/{{p.id}}/toggle"><button class="linkbutton">{{'Deactivate' if p.active else 'Activate'}}</button></form></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Existing Schedule Reference</h2>
+    <p>Upload a photo or screenshot of your existing schedule for reference. Enter the shifts above to calculate warnings and recommendations.</p>
+    <form method="post" action="/admin/upload" enctype="multipart/form-data" class="stack">
+      <input type="file" name="photo" accept=".jpg,.jpeg,.png,.webp" required>
+      <button class="primary">↑ Upload Schedule Image</button>
+    </form>
+    <div class="gallery">
+      {% for im in photos %}
+      <a href="{{url_for('static',filename='uploads/'+im.filename)}}" target="_blank" rel="noopener">
+        <img src="{{url_for('static',filename='uploads/'+im.filename)}}" alt="Uploaded roster image">
+        <small>{{im.original_name}}</small>
+      </a>
+      {% else %}
+      <p class="muted">No schedule photos uploaded yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
