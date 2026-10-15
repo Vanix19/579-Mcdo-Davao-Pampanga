@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#da291c"><title>{% block title %}McDonald's CrewFlow | Scheduling Assistant{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head><body>
+<header class="nav"><div class="nav-inner"><a class="brand" href="/" aria-label="CrewFlow home"><span class="arch-mark" aria-hidden="true"><i></i><i></i></span><span class="brand-stack"><b>McDonald's <em>CrewFlow</em></b><small>CREW SCHEDULING ASSISTANT</small></span></a><nav aria-label="Main navigation"><a href="/" class="nav-link">Crew Request</a>{% if signed_in %}<a href="/admin" class="nav-link">Manager Dashboard</a><form method="post" action="/logout"><button class="navbutton">Log out ↗</button></form>{% else %}<a href="/login" class="navbutton">Manager Login ↗</a>{% endif %}</nav></div></header>
+<div class="top-ribbon"><div class="ribbon-inner"><span class="ribbon-dot"></span> CREW MANAGEMENT PORTAL <span class="ribbon-divider">/</span> REQUESTS · SCHEDULES · SMART ALERTS</div></div>
+<main class="main">{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="notice {{ category }}" role="status">{{ message }}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
+<footer><span class="footer-brand"><span class="footer-mark">M</span> McDonald's CrewFlow</span><span>Scheduling decision support · 6th/7th day warnings are advisory and based on entered shifts.</span></footer></body></html>
