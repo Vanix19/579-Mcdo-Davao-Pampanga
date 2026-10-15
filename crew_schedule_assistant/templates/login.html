@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="loginwrap login-themed">
+  <section class="panel formpanel spotlight-card">
+    <span class="eyebrow">MANAGER ACCESS</span>
+    <h1>Welcome back, Manager</h1>
+    <p>Log in to review crew requests, monitor 6th and 7th day alerts, and balance store scheduling more easily.</p>
+    <form method="post" class="stack">
+      <label>Username<input name="username" autocomplete="username" required></label>
+      <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="primary">Log In →</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
