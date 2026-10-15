@@ -1,1 +1,0 @@
-document.addEventListener('DOMContentLoaded',()=>{const btn=document.getElementById('menuBtn');btn?.addEventListener('click',()=>document.querySelector('.sidebar')?.classList.toggle('open'));document.querySelectorAll('.flash').forEach(x=>x.setAttribute('role','status'));});
