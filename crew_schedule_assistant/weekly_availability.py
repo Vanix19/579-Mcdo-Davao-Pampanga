@@ -37,10 +37,18 @@ def parse_periods(value):
 def parse_csv(text):
     if len(text.encode('utf-8')) > 128_000:
         raise ValueError('The CSV must be smaller than 128 KB.')
-    reader = csv.DictReader(io.StringIO(text.lstrip('\ufeff')))
-    fields = reader.fieldnames or []
-    if len(fields) != len(set(fields)) or not {'name',*DAYS}.issubset(fields):
-        raise ValueError('CSV headers must include name,mon,tue,wed,thu,fri,sat,sun with no duplicates.')
+    text=text.lstrip('\ufeff\r\n ')
+    reader=None
+    # Use the header, not the data: names and notes can contain commas.
+    for delimiter in (',','\t',';'):
+        candidate=csv.DictReader(io.StringIO(text),delimiter=delimiter)
+        fields=[field.strip().lower().lstrip('\ufeff') for field in (candidate.fieldnames or [])]
+        if len(fields)==len(set(fields)) and {'name',*DAYS}.issubset(fields):
+            candidate.fieldnames=fields
+            reader=candidate
+            break
+    if reader is None:
+        raise ValueError('Use a comma-separated CSV file or paste tab-separated cells from Excel. Required headers: name, mon, tue, wed, thu, fri, sat, sun (no duplicates). If the columns became spaces, upload the original CSV file instead.')
     rows, seen = [], set()
     for number, raw in enumerate(reader, 2):
         if number > 201:

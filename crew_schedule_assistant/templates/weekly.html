@@ -18,7 +18,9 @@
 {% for error in errors %}<div class="notice error">{{error}}</div>{% endfor %}
 <form method="post" class="stack">
 <input type="hidden" name="csrf" value="{{csrf}}">
-<label>CSV data<textarea name="csv_text" rows="14" spellcheck="false" required>{{csv_text}}</textarea></label>
+<label>Open CSV or TSV file<input type="file" id="crewDataFile" accept=".csv,.tsv,.txt"></label>
+<p id="fileStatus" role="status">Choose the original file, or paste cells directly from Excel below. Commas, tabs, and semicolons are supported.</p>
+<label>Crew data<textarea id="crewDataText" name="csv_text" rows="14" spellcheck="false" required>{{csv_text}}</textarea></label>
 <p>Headers: source_row,name,mon,tue,wed,thu,fri,sat,sun,notes. Names match existing crew case-insensitively; otherwise new crew are created. This replaces all seven weekly entries for each listed crew member. Omitted crew are unchanged.</p>
 <button class="primary" name="action" value="preview">Preview import</button>
 <button class="secondary" name="action" value="stage">Save unverified draft for later</button>
@@ -51,4 +53,16 @@
 </form>
 {% endif %}
 </section>
+<script>
+document.getElementById('crewDataFile').addEventListener('change',async function(){
+  const file=this.files[0],status=document.getElementById('fileStatus');
+  if(!file)return;
+  if(file.size>128000){status.textContent='Choose a file smaller than 128 KB.';this.value='';return;}
+  try{
+    const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
+    document.getElementById('crewDataText').value=text;
+    status.textContent='File loaded. Click Preview import to check the names and shifts. Nothing has been saved yet.';
+  }catch(error){status.textContent='Could not read this file. Save it as CSV UTF-8 or TSV and try again.';this.value='';}
+});
+</script>
 {% endblock %}
