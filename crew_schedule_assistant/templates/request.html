@@ -5,7 +5,7 @@
 <h1>Your day, your request.</h1>
 <p>Choose a form, pick a date, and send your request to your manager.</p>
 <nav class="request-options" aria-label="Choose request form">
-{% for key,title,description in [('ta','TA · Time Arrangement','Choose OPENER, MID, CLOSER, or GY.'),('off','Request Off','Ask for a day off from work.')] %}
+{% for key,title,description in [('ta','TA · Time Arrangement','Choose OPENER, MID, CLOSER, GY, or FLEX.'),('off','Request Off','Ask for a day off from work.')] %}
 <a class="request-option" href="{{url_for('home',mode=key)}}" {% if mode==key %}aria-current="page"{% endif %}><strong>{{title}}</strong><span>{{description}}</span></a>
 {% endfor %}
 </nav>
@@ -32,8 +32,9 @@
 <label>Full Name *<input name="full_name" maxlength="120" autocomplete="name" placeholder="Enter your full name" required></label>
 {% if mode=='ta' %}
 <fieldset><legend>Preferred shift *</legend><div class="shift-options">
-{% for shift in ['OPENER','MID','CLOSER','GY'] %}<label><input type="radio" name="shift_period" value="{{shift}}" required> {{shift}}</label>{% endfor %}
+{% for shift in ['OPENER','MID','CLOSER','GY','FLEX'] %}<label><input type="radio" name="shift_period" value="{{shift}}" required> {{shift}}</label>{% endfor %}
 </div></fieldset>
+<p>FLEX means you can work any of the four shifts on that day.</p>
 <details><summary>Add exact hours (optional)</summary>
 <p>Hours are confirmed by your manager. Fill both fields if adding hours. An earlier end time means the next day.</p>
 <label>Start time<input type="time" name="start_time" id="startTime"></label>

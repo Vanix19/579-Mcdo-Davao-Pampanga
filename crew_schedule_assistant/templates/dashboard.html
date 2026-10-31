@@ -77,14 +77,14 @@
     <div class="candidate-list">
       {% for r in recommended %}
       <div class="candidate">
-        <div><b>{{r.name}}</b><small>{{r.role}} · If assigned: Day {{r.new_streak}}</small></div>
+        <div><b>{{r.name}}</b><small>{{r.role}} · If assigned: Day {{r.new_streak}}</small><small>Weekly TA: {{r.availability}}</small></div>
         {% if r.safe %}<span class="pill green">Recommended</span>{% else %}<span class="pill orange">Caution</span>{% endif %}
       </div>
       {% else %}
       <p class="muted">No available crew found. Add crew or adjust assignments.</p>
       {% endfor %}
     </div>
-    <p class="footnote">Suggestions only consider entered shifts, active status, and approved days off. Skills, rest hours, and legal rules still require manager verification.</p>
+    <p class="footnote">Suggestions consider entered shifts, active status, approved days off, and recorded weekly rest days. Check the listed shift availability before assigning. Missing weekly TA is unverified. Skills and rest hours still require manager verification.</p>
   </section>
 </div>
 
