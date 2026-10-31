@@ -376,10 +376,24 @@ def weekly():
         with db() as c:
             stored_draft=c.execute('SELECT csv_text FROM admin_availability_drafts WHERE admin_id=%s',(session['admin'],)).fetchone()
         if stored_draft:csv_text=stored_draft['csv_text']
+        if csv_text.strip() not in ('','name,mon,tue,wed,thu,fri,sat,sun'):
+            try:
+                rows=parse_csv(csv_text)
+            except ValueError:
+                errors.append('The saved draft could not be opened. Your saved data is unchanged.')
     if request.method=='POST':
         if not secrets.compare_digest(request.form.get('csrf',''),csrf):abort(400)
         csv_text=request.form.get('csv_text','')
         try:
+            if request.form.get('action')=='stage_grid':
+                csv_text=csv_from_grid(request.form,include_all=True)
+                rows=parse_csv(csv_text)
+                with db() as c:
+                    c.execute('''INSERT INTO admin_availability_drafts(admin_id,csv_text) VALUES (%s,%s)
+                        ON CONFLICT(admin_id) DO UPDATE SET csv_text=EXCLUDED.csv_text,updated_at=CURRENT_TIMESTAMP''',
+                        (session['admin'],csv_text))
+                flash('Draft edits saved. Confirmed Time Arrangement has not changed.','success')
+                return redirect(url_for('weekly'))
             if request.form.get('action')=='stage':
                 rows=parse_csv(csv_text)
                 with db() as c:
@@ -403,7 +417,7 @@ def weekly():
                 csv_text=csv_from_grid(request.form)
             rows=parse_csv(csv_text)
             if any(r['errors'] for r in rows):
-                errors.append('Correct the flagged entries in the review table or CSV, then preview again. Nothing has been saved.')
+                errors.append('Correct the flagged entries below, then preview again. Use Save draft to keep unfinished edits.')
             else:
                 token=signer.dumps({'csv':csv_text,'admin':session['admin'],'csrf':csrf})
         except (BadSignature,SignatureExpired):

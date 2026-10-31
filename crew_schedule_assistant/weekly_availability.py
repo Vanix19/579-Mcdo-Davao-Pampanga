@@ -8,7 +8,7 @@ ALIASES = {'O':'OPENER','OPENER':'OPENER','MID':'MID','CL':'CLOSER','CLOSER':'CL
 LABELS = ('O','MID','CL','GY','FLEX','RD','O/MID','O/CL','O/GY','MID/CL','MID/GY','CL/GY',
           'O/MID/CL','O/MID/GY','O/CL/GY','MID/CL/GY','O/MID/CL/GY')
 
-def csv_from_grid(form):
+def csv_from_grid(form, include_all=False):
     names=form.getlist('crew_name')
     included=set(form.getlist('include'))
     columns={key:form.getlist(key) for key in ('source_row','notes',*DAYS)}
@@ -18,7 +18,7 @@ def csv_from_grid(form):
     writer=csv.DictWriter(output,fieldnames=('source_row','name',*DAYS,'notes'))
     writer.writeheader()
     for index,name in enumerate(names):
-        if str(index) in included:
+        if include_all or str(index) in included:
             writer.writerow({'name':name,**{key:values[index] for key,values in columns.items()}})
     return output.getvalue()
 

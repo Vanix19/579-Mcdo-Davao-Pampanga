@@ -19,21 +19,9 @@
 <a class="linkbutton" href="{{url_for('dashboard',section='ta')}}">View confirmed Time Arrangement →</a>
 </section>
 <section class="panel section">
-<h2>Import or update crew</h2>
-<p>The photo transcription is a draft. Check every name and Monday–Sunday entry. A question mark or dash blocks import until corrected. Preview the CSV to open the editable review table below.</p>
 {% for error in errors %}<div class="notice error">{{error}}</div>{% endfor %}
-<form method="post" class="stack">
-<input type="hidden" name="csrf" value="{{csrf}}">
-<label>Open CSV or TSV file<input type="file" id="crewDataFile" accept=".csv,.tsv,.txt"></label>
-<p id="fileStatus" role="status">Choose the original file, or paste cells directly from Excel below. Commas, tabs, and semicolons are supported.</p>
-<label>Crew data<textarea id="crewDataText" name="csv_text" rows="14" spellcheck="false" required>{{csv_text}}</textarea></label>
-<p>Headers: source_row,name,mon,tue,wed,thu,fri,sat,sun,notes. Names match existing crew case-insensitively; otherwise new crew are created. This replaces all seven weekly entries for each listed crew member. Omitted crew are unchanged.</p>
-<button class="primary" name="action" value="preview">Preview import</button>
-<button class="secondary" name="action" value="stage">Save unverified draft for later</button>
-<p>Saving a draft stores the transcription privately in the database for this manager. It does not create active crew or confirmed availability.</p>
-</form>
 {% if rows %}
-<h2 class="section">Review · {{rows|length}} crew</h2>
+<h2>Review · {{rows|length}} crew</h2>
 <p>Correct names and shift labels here. Untick a row to leave it out of this import. Click Preview corrected rows after any edits; only a valid preview can be saved.</p>
 <form method="post">
 <input type="hidden" name="csrf" value="{{csrf}}">
@@ -51,28 +39,19 @@
 <tr class="review-notes"><td colspan="10">{% if r.errors %}<details open><summary class="unmatched-crew">{{r.errors|length}} item(s) to check on row {{r.source_row}}</summary>{% for error in r.errors %}<div class="unmatched-crew">{{error}}</div>{% endfor %}<small>{{r.notes}}</small></details>{% elif r.notes %}<details><summary>Source note · row {{r.source_row}}</summary><small>{{r.notes}}</small></details>{% endif %}</td></tr>
 {% endfor %}</tbody>
 </table></div>
-<button class="secondary" name="action" value="review_grid">Preview corrected rows</button>
+<div class="crew-row-actions section"><button class="secondary" name="action" value="review_grid">Preview corrected rows</button><button class="primary" name="action" value="stage_grid">Save all draft edits</button></div>
+<p>Save draft keeps every row, including unticked rows. Only the ticked rows are included when you preview for confirmation.</p>
 </form>
+{% else %}<h2>No crew draft waiting for review</h2><p>Your confirmed crew remain in the roster above. Confirmed availability is in Time Arrangement.</p>
 {% endif %}
 {% if token %}
 <form method="post" class="stack">
 <input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="token" value="{{token}}">
 <label><input type="checkbox" name="reviewed" value="yes" required> I checked every name and all seven days in this preview and want to save these weekly profiles.</label>
-<p>Saving uses exactly this preview. If you edit the CSV above, preview again first.</p>
+<p>Saving uses exactly this preview. If you change any row above, preview corrected rows again first.</p>
 <button class="primary" name="action" value="save">Confirm {{rows|length}} crew and show in Time Arrangement</button>
 </form>
 {% endif %}
 </section>
-<script>
-document.getElementById('crewDataFile').addEventListener('change',async function(){
-  const file=this.files[0],status=document.getElementById('fileStatus');
-  if(!file)return;
-  if(file.size>128000){status.textContent='Choose a file smaller than 128 KB.';this.value='';return;}
-  try{
-    const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
-    document.getElementById('crewDataText').value=text;
-    status.textContent='File loaded. Click Preview import to check the names and shifts. Nothing has been saved yet.';
-  }catch(error){status.textContent='Could not read this file. Save it as CSV UTF-8 or TSV and try again.';this.value='';}
-});
-</script>
+
 {% endblock %}
