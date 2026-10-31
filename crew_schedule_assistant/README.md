@@ -9,8 +9,9 @@ A complementary tool for an existing crew schedule, **not a replacement scheduli
 > hard-coded default admin password in the current application.
 
 ## New features
-- Time Arrangement (TA): crew request a work date and start/end time for manager review.
-- Admin sidebar: separate Dashboard, Crew Requests & TA, Schedule, Manage Crew, and Schedule Photos pages.
+- Separate TA and Request Off buttons open individual calendar forms.
+- TA offers OPENER, MID, CLOSER, or GY with optional exact hours.
+- Admin sidebar separates Time Arrangement from Request Off & Other Requests.
 
 ## Included
 - Public crew request form: Request Off, Giving, Swapping (date, reason, optional coworker).

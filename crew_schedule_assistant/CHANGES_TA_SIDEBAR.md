@@ -1,4 +1,18 @@
-# Time Arrangement and admin sidebar
+# Separate TA and Request Off calendars
+
+## Latest update
+
+The crew home page now offers two buttons: TA and Request Off. Each opens its own monthly calendar and form. Select one date per request; use the arrows to move between months or use the date field.
+
+TA requires OPENER, MID, CLOSER, or GY. Exact start/end hours are optional; no store-specific hours are assumed. If supplied, both times must be valid and different. Request Off has no shift or hours fields.
+
+The manager sidebar separates Time Arrangement from Request Off & Other Requests. Existing Giving and Swapping requests remain reviewable under Other Requests, and older TA records without a shift label still display.
+
+Startup also adds a nullable shift_period column using ADD COLUMN IF NOT EXISTS. This preserves all prior requests. No additional dependencies are required.
+
+Checks passed: six sidebar sections, separate crew forms, all four TA choices, optional/invalid/overnight hours, Off field isolation, legacy TA display, manager access controls, admin list filtering and approval return navigation. Calendar checks passed for leap years, date selection, focus, month/year changes, and optional time validation. Database calls are mocked; real PostgreSQL migration and browser layout remain unverified. Nothing has been pushed or deployed.
+
+The notes below describe the original version; this latest update supersedes its combined request form and five-section navigation.
 
 - Crew can select Time Arrangement (TA), enter a date, start/end times, and reason.
 - Managers review TA requests in Crew Requests & TA using the existing approval controls.

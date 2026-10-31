@@ -3,7 +3,7 @@
 <div class="heading">
   <div>
     <span class="eyebrow">MANAGER WORKSPACE</span>
-    <h1>{{ {'overview':'Dashboard','requests':'Crew Requests & TA','crew':'Manage Crew','schedule':'Schedule','photos':'Schedule Photos'}[section] }}</h1>
+    <h1>{{ {'overview':'Dashboard','ta':'Time Arrangement','requests':'Request Off & Other Requests','crew':'Manage Crew','schedule':'Schedule','photos':'Schedule Photos'}[section] }}</h1>
     <p>Review requests, catch consecutive-day risks, and find recommended crew for the next schedule.</p>
   </div>
   <form class="datepicker" method="get">
@@ -89,11 +89,11 @@
 </div>
 
 {% endif %}
-{% if section == 'requests' %}
+{% if section in ('requests','ta') %}
 <section class="panel section">
   <div class="sectiontitle">
     <div>
-      <h2>Crew Requests</h2>
+      <h2>{{'TA Requests' if section=='ta' else 'Crew Requests'}}</h2>
       <p>Review each crew member's request. Approval does not automatically change assignments.</p>
     </div>
   </div>
@@ -105,11 +105,12 @@
         <tr>
           <td><b>{{r.name}}</b><small>{{r.created_at}}</small>{% if not r.crew_id %}<small class="unmatched-crew">Name not matched to crew roster</small>{% endif %}</td>
           <td>{{r.kind}}</td>
-          <td>{{r.day}}{% if r.kind == 'Time Arrangement' %}<small>{{r.start_time}}–{{r.end_time}}{% if r.end_time < r.start_time %} (+1 day){% endif %}</small>{% endif %}</td>
+          <td>{{r.day}}{% if r.kind == 'Time Arrangement' %}<small>{{r.shift_period or 'Previous TA request'}}</small>{% if r.start_time and r.end_time %}<small>{{r.start_time}}–{{r.end_time}}{% if r.end_time < r.start_time %} (+1 day){% endif %}</small>{% endif %}{% endif %}</td>
           <td>{{r.reason}}{% if r.target_name %}<small>With: {{r.target_name}}</small>{% endif %}</td>
           <td><span class="pill {{'orange' if r.status=='Pending' else 'green' if r.status=='Approved' else 'red'}}">{{r.status}}</span></td>
           <td>
             <form method="post" action="/admin/request/{{r.id}}/status" class="actions">
+              <input type="hidden" name="section" value="{{section}}">
               <select name="status">
                 <option {{'selected' if r.status=='Pending'}} value="Pending">Pending</option>
                 <option {{'selected' if r.status=='Approved'}} value="Approved">Approved</option>

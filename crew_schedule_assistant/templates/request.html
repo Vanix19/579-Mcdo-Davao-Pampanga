@@ -1,66 +1,53 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="request-layout">
-  <div class="intro">
-    <span class="eyebrow">CREW SELF-SERVICE</span>
-    <h1>Simple requests for a faster McDo workflow.</h1>
-    <p>Submit a request off, give a shift, or swap with a teammate. The request will go directly to the manager for review.</p>
-    <div class="feature">✓ Easy request submission for crew</div>
-    <div class="feature">✓ Manager approval from one dashboard</div>
-    <div class="feature">✓ Better schedule balancing and decision support</div>
-  </div>
-
-  <section class="panel formpanel spotlight-card">
-    <div class="panel-head">
-      <span class="eyebrow">REQUEST FORM</span>
-      <h2>Giving, Swapping, Request Off & TA</h2>
-      <p>Fields marked * are required.</p>
-    </div>
-    <form action="/request" method="post" class="stack">
-      <label>Full Name *
-        <input type="text" name="full_name" maxlength="120" autocomplete="name" placeholder="Enter your full name" required>
-      </label>
-      <fieldset>
-        <legend>Type of Request *</legend>
-        <div class="radio-grid">
-          <label><input type="radio" name="kind" value="Request Off" checked> Request Off</label>
-          <label><input type="radio" name="kind" value="Giving"> Giving</label>
-          <label><input type="radio" name="kind" value="Swapping"> Swapping</label>
-        </div>
-          <label><input type="radio" name="kind" value="Time Arrangement"> Time Arrangement (TA)</label>
-      </fieldset>
-      <label>Date of Leave / Shift *<input type="date" name="day" required></label>
-      <div id="timeWrap" class="hidden">
-        <p>Request your preferred work hours. An earlier end time means the next day. Manager approval is required; approval does not change the roster automatically.</p>
-        <label>Start time *<input type="time" name="start_time" id="startTime"></label>
-        <label>End time *<input type="time" name="end_time" id="endTime"></label>
-      </div>
-      <label id="targetWrap" class="hidden">Give / Swap With *
-        <select name="target_id" id="target">
-          <option value="">Select a crew member</option>
-          {% for p in people %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
-        </select>
-      </label>
-      <label>Reason for the Request *
-        <textarea name="reason" rows="4" maxlength="1000" required placeholder="Briefly explain your request"></textarea>
-      </label>
-      <button class="primary" type="submit">Submit Request →</button>
-    </form>
-  </section>
+<div class="crew-workspace">
+<span class="eyebrow">CREW SELF-SERVICE</span>
+<h1>Your day, your request.</h1>
+<p>Choose a form, pick a date, and send your request to your manager.</p>
+<nav class="request-options" aria-label="Choose request form">
+{% for key,title,description in [('ta','TA · Time Arrangement','Choose OPENER, MID, CLOSER, or GY.'),('off','Request Off','Ask for a day off from work.')] %}
+<a class="request-option" href="{{url_for('home',mode=key)}}" {% if mode==key %}aria-current="page"{% endif %}><strong>{{title}}</strong><span>{{description}}</span></a>
+{% endfor %}
+</nav>
+{% if mode %}
+<form action="{{url_for('new_request')}}" method="post" class="panel request-calendar-form">
+<input type="hidden" name="kind" value="{{'Time Arrangement' if mode=='ta' else 'Request Off'}}">
+<div>
+<span class="eyebrow">{{'TIME ARRANGEMENT' if mode=='ta' else 'REQUEST OFF'}}</span>
+<h2>{{'Choose your work day' if mode=='ta' else 'Choose your day off'}}</h2>
+<p>One date per request. Use the arrows to change months.</p>
+<div class="calendar hidden" id="calendar">
+<div class="calendar-toolbar">
+<button type="button" class="secondary" id="prevMonth" aria-label="Previous month">←</button>
+<strong id="monthTitle" aria-live="polite"></strong>
+<button type="button" class="secondary" id="nextMonth" aria-label="Next month">→</button>
 </div>
-<script>
-const radios=document.querySelectorAll('input[name="kind"]');
-function sync(){
-  let v=document.querySelector('input[name="kind"]:checked')?.value;
-  let show=v==='Giving'||v==='Swapping';
-  const ta=v==='Time Arrangement';
-  document.getElementById('timeWrap').classList.toggle('hidden',!ta);
-  ['startTime','endTime'].forEach(id=>{document.getElementById(id).required=ta;document.getElementById(id).disabled=!ta;});
-  document.getElementById('targetWrap').classList.toggle('hidden',!show);
-  document.getElementById('target').required=show;
-}
-radios.forEach(r=>r.addEventListener('change',sync));
-sync();
-</script>
+<div class="calendar-weekdays" aria-hidden="true">{% for day in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] %}<span>{{day}}</span>{% endfor %}</div>
+<div class="calendar-days" id="calendarDays" role="group" aria-label="Select a date"></div>
+</div>
+<label>Selected date *<input type="date" name="day" id="selectedDate" value="{{today}}" required></label>
+</div>
+<div class="stack">
+<h2>{{'TA details' if mode=='ta' else 'Request Off details'}}</h2>
+<label>Full Name *<input name="full_name" maxlength="120" autocomplete="name" placeholder="Enter your full name" required></label>
+{% if mode=='ta' %}
+<fieldset><legend>Preferred shift *</legend><div class="shift-options">
+{% for shift in ['OPENER','MID','CLOSER','GY'] %}<label><input type="radio" name="shift_period" value="{{shift}}" required> {{shift}}</label>{% endfor %}
+</div></fieldset>
+<details><summary>Add exact hours (optional)</summary>
+<p>Hours are confirmed by your manager. Fill both fields if adding hours. An earlier end time means the next day.</p>
+<label>Start time<input type="time" name="start_time" id="startTime"></label>
+<label>End time<input type="time" name="end_time" id="endTime"></label>
+</details>
+{% endif %}
+<label>Reason *<textarea name="reason" rows="4" maxlength="1000" required placeholder="Tell your manager why you need this request"></textarea></label>
+<p>Manager approval is required. Submitting a request does not automatically change the roster.</p>
+<button class="primary" type="submit">{{'Submit TA' if mode=='ta' else 'Submit Request Off'}} →</button>
+</div>
+</form>
+{% else %}
+<div class="panel"><h2>How can we help?</h2><p>Click TA or Request Off above to open its calendar and form.</p></div>
+{% endif %}
+</div>
+{% if mode %}<script src="{{url_for('static',filename='calendar.js')}}" defer></script>{% endif %}
 {% endblock %}
-

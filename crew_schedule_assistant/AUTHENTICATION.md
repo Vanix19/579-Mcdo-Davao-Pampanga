@@ -34,9 +34,9 @@ There are no JWTs, OAuth tokens, API bearer tokens, refresh tokens, or server-si
 
 GET / and POST /request are public. A typed full name is optionally matched to an active roster entry, case-insensitively. This is not identity verification; unmatched names are retained for review.
 
-Time Arrangement adds a requested date, start time, end time, and reason. It uses the existing Pending / Approved / Rejected workflow. Earlier end times mean the following day; equal times are rejected. TA approval does not automatically add or change shifts, and does not count as approved leave.
+Time Arrangement adds a requested date, OPENER / MID / CLOSER / GY preference, optional exact start/end hours, and reason. It uses the existing Pending / Approved / Rejected workflow. Earlier end times mean the following day; equal times are rejected. TA approval does not automatically add or change shifts, and does not count as approved leave. TA and Request Off have separate calendar forms and manager lists.
 
-The admin sidebar selects Dashboard, Crew Requests & TA, Schedule, Manage Crew, or Schedule Photos through /admin?section=... . Every section remains behind login_required; hiding a section is not the access-control mechanism.
+The admin sidebar selects Dashboard, Time Arrangement, Request Off & Other Requests, Schedule, Manage Crew, or Schedule Photos through /admin?section=... . Every section remains behind login_required; hiding a section is not the access-control mechanism.
 
 ## Existing security limitations
 
