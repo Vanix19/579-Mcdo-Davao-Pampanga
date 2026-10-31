@@ -83,6 +83,8 @@ def init_db():
         c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS start_time TEXT')
         c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS end_time TEXT')
         c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS shift_period TEXT')
+        c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS weekdays INTEGER[] CHECK (weekdays <@ ARRAY[0,1,2,3,4,5,6])')
+        c.execute('ALTER TABLE requests ALTER COLUMN day DROP NOT NULL')
         # Upgrade earlier PostgreSQL databases in place without removing requests.
         c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS requester_name TEXT')
         c.execute('ALTER TABLE requests ALTER COLUMN crew_id DROP NOT NULL')
@@ -144,7 +146,8 @@ def recommendations(connection,day):
     return sorted(results,key=lambda r:(not r['safe'],r['new_streak'],r['name']))
 
 @app.context_processor
-def context():return {'today':date.today().isoformat(),'signed_in':bool(session.get('admin'))}
+def context():return {'today':date.today().isoformat(),'signed_in':bool(session.get('admin')),
+                      'weekday_names':('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')}
 
 @app.route('/')
 def home():
@@ -163,12 +166,20 @@ def new_request():
     start_time=request.form.get('start_time','')
     end_time=request.form.get('end_time','')
     shift_period=request.form.get('shift_period','')
+    weekdays=None
+    if kind=='Time Arrangement':
+        selected=request.form.getlist('weekdays')
+        if not selected or len(selected)>7 or any(value not in tuple(str(i) for i in range(7)) for value in selected):
+            flash('Choose at least one workday from Monday to Sunday.','error')
+            return redirect(url_for('home',mode='ta'))
+        weekdays=sorted({int(value) for value in selected})
+        day=None
     try:
         target=int(request.form['target_id']) if request.form.get('target_id') else None
     except ValueError:
         target=None
     if (not name or len(name)>120 or kind not in ('Request Off','Giving','Swapping','Time Arrangement')
-        or not day or not reason or len(reason)>1000):
+        or (kind!='Time Arrangement' and not day) or not reason or len(reason)>1000):
         flash('Please complete all required fields correctly.','error')
         return redirect(url_for('home'))
     if kind == 'Time Arrangement' and shift_period not in ('OPENER','MID','CLOSER','GY','FLEX'):
@@ -192,8 +203,8 @@ def new_request():
         if not valid_target or (kind in ('Giving','Swapping') and (not target or cid==target)):
             flash('Giving or swapping requires a valid different crew member.','error')
             return redirect(url_for('home'))
-        c.execute('INSERT INTO requests(crew_id,requester_name,kind,day,reason,target_id,created_at,start_time,end_time,shift_period) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                  (cid,name,kind,day,reason,target,datetime.now().isoformat(timespec='minutes'),start_time,end_time,shift_period))
+        c.execute('INSERT INTO requests(crew_id,requester_name,kind,day,reason,target_id,created_at,start_time,end_time,shift_period,weekdays) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                  (cid,name,kind,day,reason,target,datetime.now().isoformat(timespec='minutes'),start_time,end_time,shift_period,weekdays))
     flash('Request submitted. The scheduling manager will review it.','success')
     return redirect(url_for('home',mode='ta' if kind=='Time Arrangement' else 'off'))
 

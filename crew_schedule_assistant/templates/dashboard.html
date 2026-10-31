@@ -105,7 +105,7 @@
         <tr>
           <td><b>{{r.name}}</b><small>{{r.created_at}}</small>{% if not r.crew_id %}<small class="unmatched-crew">Name not matched to crew roster</small>{% endif %}</td>
           <td>{{r.kind}}</td>
-          <td>{{r.day}}{% if r.kind == 'Time Arrangement' %}<small>{{r.shift_period or 'Previous TA request'}}</small>{% if r.start_time and r.end_time %}<small>{{r.start_time}}–{{r.end_time}}{% if r.end_time < r.start_time %} (+1 day){% endif %}</small>{% endif %}{% endif %}</td>
+          <td>{% if r.weekdays %}<b>Weekly</b><small>{% for weekday in r.weekdays %}{{weekday_names[weekday]}}{{', ' if not loop.last}}{% endfor %}</small>{% else %}{{r.day}}{% endif %}{% if r.kind == 'Time Arrangement' %}<small>{{r.shift_period or 'Previous TA request'}}</small>{% if r.start_time and r.end_time %}<small>{{r.start_time}}–{{r.end_time}}{% if r.end_time < r.start_time %} (+1 day){% endif %}</small>{% endif %}{% endif %}</td>
           <td>{{r.reason}}{% if r.target_name %}<small>With: {{r.target_name}}</small>{% endif %}</td>
           <td><span class="pill {{'orange' if r.status=='Pending' else 'green' if r.status=='Approved' else 'red'}}">{{r.status}}</span></td>
           <td>

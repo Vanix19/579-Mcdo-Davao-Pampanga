@@ -68,6 +68,10 @@ table{width:100%;border-collapse:collapse;text-align:left}th{font-size:11px;colo
 @media(max-width:470px){.metrics{gap:9px}.metric{padding:13px}.metric strong{font-size:27px}.datepicker{flex-wrap:wrap}.nav a:not(.brand),.navbutton{font-size:11px}.nav nav{gap:8px}.brand{font-size:20px}.brand-text{gap:6px}.gallery{grid-template-columns:1fr 1fr}}
 
 .unmatched-crew{color:#b91c1c!important;font-weight:700;}
+.workday-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.workday-options label{display:flex;align-items:center;gap:8px;min-height:54px;padding:15px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.workday-options label:has(input:checked){background:var(--mcdo-yellow-soft);border-color:var(--mcdo-red)}
+.workday-options label:has(input:focus-visible){outline:3px solid var(--mcdo-yellow);outline-offset:2px}
 input[type=checkbox]{width:auto!important;margin:0 8px 0 0!important;accent-color:var(--mcdo-red)}
 .crew-workspace{max-width:1050px;margin:0 auto}
 .request-options{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0}
