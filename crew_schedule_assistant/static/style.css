@@ -68,6 +68,8 @@ table{width:100%;border-collapse:collapse;text-align:left}th{font-size:11px;colo
 @media(max-width:470px){.metrics{gap:9px}.metric{padding:13px}.metric strong{font-size:27px}.datepicker{flex-wrap:wrap}.nav a:not(.brand),.navbutton{font-size:11px}.nav nav{gap:8px}.brand{font-size:20px}.brand-text{gap:6px}.gallery{grid-template-columns:1fr 1fr}}
 
 .unmatched-crew{color:#b91c1c!important;font-weight:700;}
+.crew-row-actions{display:flex;align-items:center;flex-wrap:wrap;gap:18px}.crew-row-actions form{margin:0}.crew-row-actions a.linkbutton{text-decoration:none}
+.crew-edit-panel{max-width:650px}.crew-edit-panel .stack{margin-top:18px}
 .crew-review-wrap{max-width:100%;max-height:70vh;overflow:auto;scrollbar-gutter:stable;border:1px solid var(--line);border-radius:12px}
 .crew-review-table{table-layout:fixed;min-width:820px;width:100%}
 .crew-review-table .include-col{width:4%}.crew-review-table .photo-col{width:5%}.crew-review-table .name-col{width:21%}.crew-review-table .weekday-col{width:10%}

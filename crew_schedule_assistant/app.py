@@ -256,7 +256,7 @@ def dashboard():
 @login_required
 def add_crew():
     name=request.form.get('name','').strip();role=request.form.get('role','Crew').strip() or 'Crew'
-    if not name or len(name)>120 or len(role)>80:flash('Invalid crew information.','error')
+    if not name or len(name)>120 or role not in ('Crew','Crew Trainer'):flash('Enter a name and choose Crew or Crew Trainer.','error')
     else:
         try:
             with db() as c:
@@ -265,6 +265,38 @@ def add_crew():
         except UniqueViolation:
             flash('This crew member already exists.','error')
     return redirect(url_for('dashboard',section='crew'))
+
+@app.route('/admin/crew/<int:cid>/edit',methods=['GET','POST'])
+@login_required
+def edit_crew(cid):
+    csrf=session.setdefault('weekly_csrf',secrets.token_urlsafe(32))
+    with db() as c:
+        person=c.execute('SELECT * FROM crew WHERE id=%s',(cid,)).fetchone()
+    if not person:abort(404)
+    name=person['name'];role=person['role'];error=None
+    if request.method=='POST':
+        if not secrets.compare_digest(request.form.get('csrf',''),csrf):abort(400)
+        name=' '.join(request.form.get('name','').split())
+        role=request.form.get('role','')
+        if not name or len(name)>120:
+            error='Enter a full name of up to 120 characters.'
+        elif role not in ('Crew','Crew Trainer') and role!=person['role']:
+            error='Choose Crew or Crew Trainer.'
+        else:
+            try:
+                with db() as c:
+                    duplicate=c.execute('SELECT id FROM crew WHERE lower(trim(name))=lower(%s) AND id<>%s',(name,cid)).fetchone()
+                    if duplicate:
+                        error='Another crew member already uses this name.'
+                    else:
+                        c.execute('UPDATE crew SET name=%s,role=%s WHERE id=%s',(name,role,cid))
+                if not error:
+                    flash('Crew name and role updated.','success')
+                    return redirect(url_for('weekly'))
+            except UniqueViolation:
+                error='Another crew member already uses this name.'
+    return render_template('edit_crew.html',section='crew',selected_day=date.today().isoformat(),
+                           person=person,name=name,role=role,csrf=csrf,error=error)
 
 @app.post('/admin/crew/<int:cid>/toggle')
 @login_required

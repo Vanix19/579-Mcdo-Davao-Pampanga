@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<span class="eyebrow">MANAGE CREW</span>
+<h1>Edit crew member</h1>
+<section class="panel crew-edit-panel">
+<p>Update the name or role. Existing requests, shifts, and weekly availability remain linked to this crew member.</p>
+{% if error %}<div class="notice error" role="alert">{{error}}</div>{% endif %}
+<form method="post" class="stack">
+<input type="hidden" name="csrf" value="{{csrf}}">
+<label>Full name *<input name="name" value="{{name}}" maxlength="120" autocomplete="name" required></label>
+<label>Role *<select name="role" required>
+{% if person.role not in ('Crew','Crew Trainer') %}<option value="{{person.role}}" {{'selected' if role==person.role else ''}}>{{person.role}} (current role)</option>{% endif %}
+{% for option in ('Crew','Crew Trainer') %}<option value="{{option}}" {{'selected' if role==option else ''}}>{{option}}</option>{% endfor %}
+</select></label>
+<p>Status: <b>{{'Active' if person.active else 'Inactive'}}</b></p>
+<div class="crew-row-actions"><button class="primary" type="submit">Save changes</button><a href="{{url_for('weekly')}}">Cancel</a></div>
+</form>
+</section>
+{% endblock %}
