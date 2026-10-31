@@ -68,3 +68,12 @@ table{width:100%;border-collapse:collapse;text-align:left}th{font-size:11px;colo
 @media(max-width:470px){.metrics{gap:9px}.metric{padding:13px}.metric strong{font-size:27px}.datepicker{flex-wrap:wrap}.nav a:not(.brand),.navbutton{font-size:11px}.nav nav{gap:8px}.brand{font-size:20px}.brand-text{gap:6px}.gallery{grid-template-columns:1fr 1fr}}
 
 .unmatched-crew{color:#b91c1c!important;font-weight:700;}
+.admin-layout{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1550px;margin:auto}
+.admin-layout .main{width:100%;min-width:0}
+.admin-sidebar{padding:36px 16px;background:#fff8ea;border-right:1px solid var(--line)}
+.admin-sidebar nav{display:flex;flex-direction:column;gap:8px;position:sticky;top:110px}
+.admin-sidebar a{padding:14px;border-radius:12px;text-decoration:none;font-weight:700}
+.admin-sidebar a:hover{background:var(--mcdo-yellow-soft)}
+.admin-sidebar a[aria-current=page]{background:var(--mcdo-red);color:white}
+@media(max-width:850px){.admin-layout{grid-template-columns:1fr}.admin-sidebar{padding:12px;border-right:0;border-bottom:1px solid var(--line)}.admin-sidebar nav{position:static;flex-direction:row;flex-wrap:wrap}.admin-sidebar a{padding:10px;font-size:13px}}
+

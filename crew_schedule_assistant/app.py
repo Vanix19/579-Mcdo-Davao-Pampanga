@@ -64,6 +64,9 @@ def init_db():
     with db() as c:
         for statement in schema:
             c.execute(statement)
+        # Optional time ranges preserve existing date-only requests.
+        c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS start_time TEXT')
+        c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS end_time TEXT')
         # Upgrade earlier PostgreSQL databases in place without removing requests.
         c.execute('ALTER TABLE requests ADD COLUMN IF NOT EXISTS requester_name TEXT')
         c.execute('ALTER TABLE requests ALTER COLUMN crew_id DROP NOT NULL')
@@ -86,6 +89,14 @@ def login_required(f):
         if not session.get('admin'): return redirect(url_for('login'))
         return f(*args,**kwargs)
     return wrapper
+
+def valid_times(start, end):
+    try:
+        start_time = datetime.strptime(start, '%H:%M').time()
+        end_time = datetime.strptime(end, '%H:%M').time()
+        return start_time != end_time
+    except (ValueError, TypeError):
+        return False
 
 def iso_day(v):
     try:return date.fromisoformat(v).isoformat()
@@ -125,14 +136,23 @@ def new_request():
     kind=request.form.get('kind','')
     day=iso_day(request.form.get('day'))
     reason=request.form.get('reason','').strip()
+    start_time=request.form.get('start_time','')
+    end_time=request.form.get('end_time','')
     try:
         target=int(request.form['target_id']) if request.form.get('target_id') else None
     except ValueError:
         target=None
-    if (not name or len(name)>120 or kind not in ('Request Off','Giving','Swapping')
+    if (not name or len(name)>120 or kind not in ('Request Off','Giving','Swapping','Time Arrangement')
         or not day or not reason or len(reason)>1000):
         flash('Please complete all required fields correctly.','error')
         return redirect(url_for('home'))
+    if kind == 'Time Arrangement' and not valid_times(start_time, end_time):
+        flash('Please enter different valid start and end times. For overnight work, the end time is on the next day.','error')
+        return redirect(url_for('home'))
+    if kind != 'Time Arrangement':
+        start_time=end_time=None
+    else:
+        target=None
     with db() as c:
         # Match registered crew, but never invent a roster member.
         existing=c.execute('SELECT id FROM crew WHERE lower(name)=lower(%s) AND active=1',(name,)).fetchone()
@@ -141,8 +161,8 @@ def new_request():
         if not valid_target or (kind in ('Giving','Swapping') and (not target or cid==target)):
             flash('Giving or swapping requires a valid different crew member.','error')
             return redirect(url_for('home'))
-        c.execute('INSERT INTO requests(crew_id,requester_name,kind,day,reason,target_id,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s)',
-                  (cid,name,kind,day,reason,target,datetime.now().isoformat(timespec='minutes')))
+        c.execute('INSERT INTO requests(crew_id,requester_name,kind,day,reason,target_id,created_at,start_time,end_time) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                  (cid,name,kind,day,reason,target,datetime.now().isoformat(timespec='minutes'),start_time,end_time))
     flash('Request submitted. The scheduling manager will review it.','success')
     return redirect(url_for('home'))
 
@@ -161,6 +181,9 @@ def logout():session.clear();return redirect(url_for('home'))
 @app.route('/admin')
 @login_required
 def dashboard():
+    section=request.args.get('section','overview')
+    if section not in ('overview','requests','crew','schedule','photos'):
+        section='overview'
     target=iso_day(request.args.get('day')) or date.today().isoformat()
     with db() as c:
         people=c.execute('SELECT * FROM crew ORDER BY name').fetchall()
@@ -170,7 +193,7 @@ def dashboard():
         assignments=[{'id':s['id'],'crew_id':s['crew_id'],'name':s['name'],'role':s['role'],'streak':crew_streak(c,s['crew_id'],target)} for s in shifts]
         choices=recommendations(c,target)
         count=c.execute("SELECT count(*) AS total FROM requests WHERE status='Pending'").fetchone()['total']
-    return render_template('dashboard.html',people=people,assignments=assignments,requests=reqs,photos=photos,recommended=choices,selected_day=target,pending=count,alerts=[a for a in assignments if a['streak']>=6])
+    return render_template('dashboard.html',section=section,people=people,assignments=assignments,requests=reqs,photos=photos,recommended=choices,selected_day=target,pending=count,alerts=[a for a in assignments if a['streak']>=6])
 
 @app.post('/admin/crew')
 @login_required
@@ -184,13 +207,13 @@ def add_crew():
             flash('Crew member added.','success')
         except UniqueViolation:
             flash('This crew member already exists.','error')
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard',section='crew'))
 
 @app.post('/admin/crew/<int:cid>/toggle')
 @login_required
 def toggle_crew(cid):
     with db() as c:c.execute('UPDATE crew SET active=1-active WHERE id=%s',(cid,))
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard',section='crew'))
 
 @app.post('/admin/shift')
 @login_required
@@ -211,14 +234,14 @@ def add_shift():
             except UniqueViolation:
                 c.rollback()
                 flash('Crew is already scheduled for this date.','error')
-    return redirect(url_for('dashboard',day=day))
+    return redirect(url_for('dashboard',day=day,section='schedule'))
 
 @app.post('/admin/shift/<int:sid>/delete')
 @login_required
 def remove_shift(sid):
     day=iso_day(request.form.get('day')) or date.today().isoformat()
     with db() as c:c.execute('DELETE FROM shifts WHERE id=%s',(sid,))
-    flash('Shift removed.','success');return redirect(url_for('dashboard',day=day))
+    flash('Shift removed.','success');return redirect(url_for('dashboard',day=day,section='schedule'))
 
 @app.post('/admin/request/<int:rid>/status')
 @login_required
@@ -227,7 +250,7 @@ def status(rid):
     if s in ('Approved','Rejected','Pending'):
         with db() as c:c.execute('UPDATE requests SET status=%s WHERE id=%s',(s,rid))
         flash('Request status updated. Remember to adjust the roster manually if needed.','success')
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('dashboard',section='requests'))
 
 @app.post('/admin/upload')
 @login_required

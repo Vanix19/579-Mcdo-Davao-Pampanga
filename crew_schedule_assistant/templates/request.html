@@ -13,7 +13,7 @@
   <section class="panel formpanel spotlight-card">
     <div class="panel-head">
       <span class="eyebrow">REQUEST FORM</span>
-      <h2>Giving, Swapping & Request Off</h2>
+      <h2>Giving, Swapping, Request Off & TA</h2>
       <p>Fields marked * are required.</p>
     </div>
     <form action="/request" method="post" class="stack">
@@ -27,8 +27,14 @@
           <label><input type="radio" name="kind" value="Giving"> Giving</label>
           <label><input type="radio" name="kind" value="Swapping"> Swapping</label>
         </div>
+          <label><input type="radio" name="kind" value="Time Arrangement"> Time Arrangement (TA)</label>
       </fieldset>
       <label>Date of Leave / Shift *<input type="date" name="day" required></label>
+      <div id="timeWrap" class="hidden">
+        <p>Request your preferred work hours. An earlier end time means the next day. Manager approval is required; approval does not change the roster automatically.</p>
+        <label>Start time *<input type="time" name="start_time" id="startTime"></label>
+        <label>End time *<input type="time" name="end_time" id="endTime"></label>
+      </div>
       <label id="targetWrap" class="hidden">Give / Swap With *
         <select name="target_id" id="target">
           <option value="">Select a crew member</option>
@@ -46,7 +52,10 @@
 const radios=document.querySelectorAll('input[name="kind"]');
 function sync(){
   let v=document.querySelector('input[name="kind"]:checked')?.value;
-  let show=v!=='Request Off';
+  let show=v==='Giving'||v==='Swapping';
+  const ta=v==='Time Arrangement';
+  document.getElementById('timeWrap').classList.toggle('hidden',!ta);
+  ['startTime','endTime'].forEach(id=>{document.getElementById(id).required=ta;document.getElementById(id).disabled=!ta;});
   document.getElementById('targetWrap').classList.toggle('hidden',!show);
   document.getElementById('target').required=show;
 }
@@ -54,3 +63,4 @@ radios.forEach(r=>r.addEventListener('change',sync));
 sync();
 </script>
 {% endblock %}
+

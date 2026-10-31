@@ -23,6 +23,16 @@
     </nav>
   </header>
 
+  <div class="{{ 'admin-layout' if section is defined else '' }}">
+  {% if section is defined and signed_in %}
+  <aside class="admin-sidebar">
+    <nav aria-label="Admin navigation">
+      {% for key, label in [('overview','Dashboard'),('requests','Crew Requests & TA'),('schedule','Schedule'),('crew','Manage Crew'),('photos','Schedule Photos')] %}
+      <a href="{{url_for('dashboard',section=key,day=selected_day)}}" {% if section == key %}aria-current="page"{% endif %}>{{label}}</a>
+      {% endfor %}
+    </nav>
+  </aside>
+  {% endif %}
   <main class="main">
     {% with messages=get_flashed_messages(with_categories=true) %}
       {% for category,message in messages %}
@@ -31,7 +41,9 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
+  </div>
 
   <footer>Unofficial McDo-inspired CrewFlow interface • Scheduling support tool for existing crew rosters. Warnings are advisory, not payroll or labor-law determinations.</footer>
 </body>
 </html>
+

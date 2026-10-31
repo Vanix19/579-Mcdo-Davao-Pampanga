@@ -2,6 +2,16 @@
 
 A complementary tool for an existing crew schedule, **not a replacement scheduling system**.
 
+> Current version uses PostgreSQL. See README_POSTGRES.md for setup,
+> AUTHENTICATION.md for login/session behavior, and CHANGES_TA_SIDEBAR.md for the
+> TA request and sidebar update. The SQLite instructions below are historical
+> and do not apply to current app.py. DATABASE_URL is required; there is no
+> hard-coded default admin password in the current application.
+
+## New features
+- Time Arrangement (TA): crew request a work date and start/end time for manager review.
+- Admin sidebar: separate Dashboard, Crew Requests & TA, Schedule, Manage Crew, and Schedule Photos pages.
+
 ## Included
 - Public crew request form: Request Off, Giving, Swapping (date, reason, optional coworker).
 - Admin login, request approvals/rejections, crew registry, activate/deactivate crew.
@@ -40,3 +50,4 @@ Open http://localhost:5000. Manager page is `/login`. If you didn't set ADMIN_PA
 - Recommendations are advisory; managers must confirm competency, actual availability, and company policy.
 - For accurate alerts, enter ALL relevant preceding shifts, not only the current date. E.g., a Day 7 warning requires that the preceding six days be present in the system.
 - Admin approval of request doesn't auto-modify roster or coworkers' consent; changes are manually reflected.
+

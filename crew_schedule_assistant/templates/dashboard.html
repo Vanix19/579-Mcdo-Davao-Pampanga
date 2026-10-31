@@ -3,15 +3,17 @@
 <div class="heading">
   <div>
     <span class="eyebrow">MANAGER WORKSPACE</span>
-    <h1>McDo Scheduling Dashboard</h1>
+    <h1>{{ {'overview':'Dashboard','requests':'Crew Requests & TA','crew':'Manage Crew','schedule':'Schedule','photos':'Schedule Photos'}[section] }}</h1>
     <p>Review requests, catch consecutive-day risks, and find recommended crew for the next schedule.</p>
   </div>
   <form class="datepicker" method="get">
+    <input type="hidden" name="section" value="{{section}}">
     <label>Check schedule date <input type="date" name="day" value="{{selected_day}}"></label>
     <button class="primary" type="submit">Check Date</button>
   </form>
 </div>
 
+{% if section == 'overview' %}
 <div class="metrics">
   <div class="metric"><span>Active Crew</span><strong>{{people | selectattr('active') | list | length}}</strong></div>
   <div class="metric"><span>Pending Requests</span><strong>{{pending}}</strong></div>
@@ -23,6 +25,8 @@
 <div class="alert"><b>⚠ Consecutive-day alert:</b> {% for a in alerts %}{{a.name}} (Day {{a.streak}}){% if not loop.last %}, {% endif %}{% endfor %}. Consider a rest day or assign another available crew member.</div>
 {% endif %}
 
+{% endif %}
+{% if section in ('overview','schedule') %}
 <div class="two">
   <section class="panel">
     <div class="sectiontitle">
@@ -84,6 +88,8 @@
   </section>
 </div>
 
+{% endif %}
+{% if section == 'requests' %}
 <section class="panel section">
   <div class="sectiontitle">
     <div>
@@ -99,7 +105,7 @@
         <tr>
           <td><b>{{r.name}}</b><small>{{r.created_at}}</small>{% if not r.crew_id %}<small class="unmatched-crew">Name not matched to crew roster</small>{% endif %}</td>
           <td>{{r.kind}}</td>
-          <td>{{r.day}}</td>
+          <td>{{r.day}}{% if r.kind == 'Time Arrangement' %}<small>{{r.start_time}}–{{r.end_time}}{% if r.end_time < r.start_time %} (+1 day){% endif %}</small>{% endif %}</td>
           <td>{{r.reason}}{% if r.target_name %}<small>With: {{r.target_name}}</small>{% endif %}</td>
           <td><span class="pill {{'orange' if r.status=='Pending' else 'green' if r.status=='Approved' else 'red'}}">{{r.status}}</span></td>
           <td>
@@ -121,7 +127,9 @@
   </div>
 </section>
 
-<div class="two section">
+{% endif %}
+{% if section == 'crew' %}
+<div class="section">
   <section class="panel">
     <h2>Manage Crew</h2>
     <p>Register crew members so they can submit requests and be checked for schedule risks.</p>
@@ -147,6 +155,10 @@
     </div>
   </section>
 
+</div>
+{% endif %}
+{% if section == 'photos' %}
+<div class="section">
   <section class="panel">
     <h2>Existing Schedule Reference</h2>
     <p>Upload a photo or screenshot of your existing schedule for reference. Enter the shifts above to calculate warnings and recommendations.</p>
@@ -166,4 +178,6 @@
     </div>
   </section>
 </div>
+{% endif %}
 {% endblock %}
+
