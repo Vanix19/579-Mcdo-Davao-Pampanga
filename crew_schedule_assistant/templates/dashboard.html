@@ -90,6 +90,7 @@
 
 {% endif %}
 {% if section in ('requests','ta') %}
+{% if section=='ta' %}{% include 'confirmed_availability.html' %}{% endif %}
 <section class="panel section">
   <div class="sectiontitle">
     <div>

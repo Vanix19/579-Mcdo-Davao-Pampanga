@@ -1,16 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
 <span class="eyebrow">MANAGER WORKSPACE</span>
-<h1>Weekly Crew TA</h1>
+<h1>Manage Crew</h1>
 <p>Repeating Monday–Sunday availability. O = OPENER · CL = CLOSER · RD = rest day · FLEX = all four shifts. A slash means either shift is allowed.</p>
 <section class="panel">
-<h2>Saved crew availability</h2>
-<p>This is availability, not an assigned work schedule. Importing it does not create dated shifts or approve requests. Existing inactive crew remain inactive.</p>
+<h2>Crew roster</h2>
+<p>Add crew or correct the imported entries below. Confirmed weekly availability appears under Time Arrangement.</p>
+<form method="post" action="{{url_for('add_crew')}}" class="inlineform crewadd">
+<input name="name" placeholder="Crew full name" maxlength="120" required>
+<input name="role" placeholder="Role (e.g. Service)" maxlength="80">
+<button class="primary">+ Add Crew</button>
+</form>
 <div class="tablewrap"><table>
-<thead><tr><th>Name</th><th>Status</th>{% for day in days %}<th>{{day|upper}}</th>{% endfor %}</tr></thead>
-<tbody>{% for p in profiles %}<tr><td>{{p.name}}</td><td>{{'Active' if p.active else 'Inactive'}}</td>{% for label in p.days %}<td>{{label}}</td>{% endfor %}</tr>
-{% else %}<tr><td colspan="9">No weekly availability saved yet.</td></tr>{% endfor %}</tbody>
+<thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+<tbody>{% for p in people %}<tr><td>{{p.name}}</td><td>{{p.role}}</td><td>{{'Active' if p.active else 'Inactive'}}</td><td><form method="post" action="{{url_for('toggle_crew',cid=p.id)}}"><button class="linkbutton">{{'Deactivate' if p.active else 'Activate'}}</button></form></td></tr>
+{% else %}<tr><td colspan="4">No crew registered yet.</td></tr>{% endfor %}</tbody>
 </table></div>
+<a class="linkbutton" href="{{url_for('dashboard',section='ta')}}">View confirmed Time Arrangement →</a>
 </section>
 <section class="panel section">
 <h2>Import or update crew</h2>
@@ -31,15 +37,19 @@
 <p>Correct names and shift labels here. Untick a row to leave it out of this import. Click Preview corrected rows after any edits; only a valid preview can be saved.</p>
 <form method="post">
 <input type="hidden" name="csrf" value="{{csrf}}">
-<div class="tablewrap"><table>
-<thead><tr><th>Include</th><th>Photo row</th><th>Name</th>{% for day in days %}<th>{{day|upper}}</th>{% endfor %}<th>Review</th></tr></thead>
+<p class="review-scroll-help">On smaller screens, swipe the table left or right to see every day.</p>
+<div class="tablewrap crew-review-wrap" tabindex="0" role="region" aria-label="Editable crew review, scroll horizontally for all weekdays"><table class="crew-review-table">
+<colgroup><col class="include-col"><col class="photo-col"><col class="name-col">{% for day in days %}<col class="weekday-col">{% endfor %}</colgroup>
+<thead><tr><th>Use</th><th>Row</th><th>Name</th>{% for day in days %}<th>{{day|upper}}</th>{% endfor %}</tr></thead>
 <tbody>{% for r in rows %}<tr><td><input type="checkbox" name="include" value="{{loop.index0}}" checked aria-label="Include photo row {{r.source_row}}"></td><td>{{r.source_row}}<input type="hidden" name="source_row" value="{{r.source_row}}"><input type="hidden" name="notes" value="{{r.notes}}"></td>
-<td><input name="crew_name" value="{{r.name}}" maxlength="120" aria-label="Name on photo row {{r.source_row}}" style="min-width:230px"></td>
-{% for day in days %}<td><select name="{{day}}" aria-label="{{day|upper}} on photo row {{r.source_row}}" style="min-width:100px">
+<td><input name="crew_name" value="{{r.name}}" maxlength="120" aria-label="Name on photo row {{r.source_row}}"></td>
+{% for day in days %}<td><select name="{{day}}" aria-label="{{day|upper}} on photo row {{r.source_row}}">
 {% if r.labels[day] not in labels %}<option selected value="{{r.labels[day]}}">{{r.labels[day] or '?'}}</option>{% endif %}
 {% for label in labels %}<option value="{{label}}" {{'selected' if r.labels[day]==label else ''}}>{{label}}</option>{% endfor %}
 </select></td>{% endfor %}
-<td>{% for error in r.errors %}<div class="unmatched-crew">{{error}}</div>{% endfor %}<small>{{r.notes}}</small></td></tr>{% endfor %}</tbody>
+</tr>
+<tr class="review-notes"><td colspan="10">{% if r.errors %}<details open><summary class="unmatched-crew">{{r.errors|length}} item(s) to check on row {{r.source_row}}</summary>{% for error in r.errors %}<div class="unmatched-crew">{{error}}</div>{% endfor %}<small>{{r.notes}}</small></details>{% elif r.notes %}<details><summary>Source note · row {{r.source_row}}</summary><small>{{r.notes}}</small></details>{% endif %}</td></tr>
+{% endfor %}</tbody>
 </table></div>
 <button class="secondary" name="action" value="review_grid">Preview corrected rows</button>
 </form>
@@ -49,7 +59,7 @@
 <input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="token" value="{{token}}">
 <label><input type="checkbox" name="reviewed" value="yes" required> I checked every name and all seven days in this preview and want to save these weekly profiles.</label>
 <p>Saving uses exactly this preview. If you edit the CSV above, preview again first.</p>
-<button class="primary" name="action" value="save">Save {{rows|length}} crew to database</button>
+<button class="primary" name="action" value="save">Confirm {{rows|length}} crew and show in Time Arrangement</button>
 </form>
 {% endif %}
 </section>

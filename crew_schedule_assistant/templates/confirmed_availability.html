@@ -1,0 +1,10 @@
+<section class="panel section">
+<h2>Confirmed weekly Time Arrangement</h2>
+<p>Reviewed crew availability from Manage Crew. Drafts do not appear here. O = OPENER · CL = CLOSER · RD = rest day · FLEX = all four shifts.</p>
+<div class="tablewrap" tabindex="0" role="region" aria-label="Confirmed weekly availability"><table>
+<thead><tr><th>Name</th><th>Status</th>{% for day in days %}<th>{{day|upper}}</th>{% endfor %}</tr></thead>
+<tbody>{% for p in profiles %}<tr><td>{{p.name}}</td><td>{{'Active' if p.active else 'Inactive'}}</td>{% for label in p.days %}<td>{{label}}</td>{% endfor %}</tr>
+{% else %}<tr><td colspan="9">No confirmed weekly TA yet. Correct and confirm the crew entries in Manage Crew.</td></tr>{% endfor %}</tbody>
+</table></div>
+<a class="linkbutton" href="{{url_for('weekly')}}">Manage crew and review drafts →</a>
+</section>

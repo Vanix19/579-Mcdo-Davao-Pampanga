@@ -68,6 +68,15 @@ table{width:100%;border-collapse:collapse;text-align:left}th{font-size:11px;colo
 @media(max-width:470px){.metrics{gap:9px}.metric{padding:13px}.metric strong{font-size:27px}.datepicker{flex-wrap:wrap}.nav a:not(.brand),.navbutton{font-size:11px}.nav nav{gap:8px}.brand{font-size:20px}.brand-text{gap:6px}.gallery{grid-template-columns:1fr 1fr}}
 
 .unmatched-crew{color:#b91c1c!important;font-weight:700;}
+.crew-review-wrap{max-width:100%;max-height:70vh;overflow:auto;scrollbar-gutter:stable;border:1px solid var(--line);border-radius:12px}
+.crew-review-table{table-layout:fixed;min-width:820px;width:100%}
+.crew-review-table .include-col{width:4%}.crew-review-table .photo-col{width:5%}.crew-review-table .name-col{width:21%}.crew-review-table .weekday-col{width:10%}
+.crew-review-table th,.crew-review-table td{padding:10px 5px;vertical-align:top}
+.crew-review-table thead th{position:sticky;top:0;z-index:2}
+.crew-review-table input[name=crew_name],.crew-review-table select{min-width:0!important;width:100%;margin:0!important;padding:10px 5px;font-size:12px}
+.crew-review-table .review-notes td{padding:0 10px 12px}
+.crew-review-table .review-notes details{white-space:normal;overflow-wrap:anywhere}
+.review-scroll-help{font-size:12px;margin:12px 0}
 .workday-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .workday-options label{display:flex;align-items:center;gap:8px;min-height:54px;padding:15px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
 .workday-options label:has(input:checked){background:var(--mcdo-yellow-soft);border-color:var(--mcdo-red)}

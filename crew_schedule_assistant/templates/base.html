@@ -27,8 +27,8 @@
   {% if section is defined and signed_in %}
   <aside class="admin-sidebar">
     <nav aria-label="Admin navigation">
-      {% for key, label in [('overview','Dashboard'),('ta','Time Arrangement'),('weekly','Weekly Crew TA'),('requests','Request Off & Other Requests'),('schedule','Schedule'),('crew','Manage Crew'),('photos','Schedule Photos')] %}
-      <a href="{{url_for('weekly') if key=='weekly' else url_for('dashboard',section=key,day=selected_day)}}" {% if section == key %}aria-current="page"{% endif %}>{{label}}</a>
+      {% for key, label in [('overview','Dashboard'),('ta','Time Arrangement'),('requests','Request Off & Other Requests'),('schedule','Schedule'),('crew','Manage Crew'),('photos','Schedule Photos')] %}
+      <a href="{{url_for('weekly') if key=='crew' else url_for('dashboard',section=key,day=selected_day)}}" {% if section == key %}aria-current="page"{% endif %}>{{label}}</a>
       {% endfor %}
     </nav>
   </aside>

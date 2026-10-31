@@ -24,6 +24,16 @@ app.config['MAX_CONTENT_LENGTH']=8*1024*1024
 def db():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
+def weekly_profiles(connection):
+    stored=connection.execute('''SELECT c.id,c.name,c.active,a.weekday,a.source_label
+        FROM crew c JOIN crew_weekly_availability a ON c.id=a.crew_id
+        ORDER BY c.name,a.weekday''').fetchall()
+    profiles={}
+    for item in stored:
+        profile=profiles.setdefault(item['id'],{'name':item['name'],'active':item['active'],'days':['Not recorded']*7})
+        profile['days'][item['weekday']]=item['source_label']
+    return list(profiles.values())
+
 
 def init_db():
     schema = [
@@ -226,6 +236,8 @@ def dashboard():
     section=request.args.get('section','overview')
     if section not in ('overview','requests','ta','crew','schedule','photos'):
         section='overview'
+    if section=='crew':
+        return redirect(url_for('weekly'))
     target=iso_day(request.args.get('day')) or date.today().isoformat()
     with db() as c:
         people=c.execute('SELECT * FROM crew ORDER BY name').fetchall()
@@ -235,9 +247,10 @@ def dashboard():
         assignments=[{'id':s['id'],'crew_id':s['crew_id'],'name':s['name'],'role':s['role'],'streak':crew_streak(c,s['crew_id'],target)} for s in shifts]
         choices=recommendations(c,target)
         count=c.execute("SELECT count(*) AS total FROM requests WHERE status='Pending'").fetchone()['total']
+        profiles=weekly_profiles(c) if section=='ta' else []
     if section in ('requests','ta'):
         reqs=[r for r in reqs if (r['kind']=='Time Arrangement') == (section=='ta')]
-    return render_template('dashboard.html',section=section,people=people,assignments=assignments,requests=reqs,photos=photos,recommended=choices,selected_day=target,pending=count,alerts=[a for a in assignments if a['streak']>=6])
+    return render_template('dashboard.html',section=section,people=people,assignments=assignments,requests=reqs,photos=photos,recommended=choices,selected_day=target,pending=count,alerts=[a for a in assignments if a['streak']>=6],profiles=profiles,days=DAYS)
 
 @app.post('/admin/crew')
 @login_required
@@ -316,6 +329,11 @@ def large(_):flash('Image too large (max 8 MB).','error');return redirect(url_fo
 
 @app.route('/admin/weekly',methods=['GET','POST'])
 @login_required
+def legacy_weekly():
+    return redirect(url_for('weekly'),code=307 if request.method=='POST' else 302)
+
+@app.route('/admin/manage-crew',methods=['GET','POST'])
+@login_required
 def weekly():
     csrf=session.setdefault('weekly_csrf',secrets.token_urlsafe(32))
     signer=URLSafeTimedSerializer(app.secret_key,salt='weekly-import-v1')
@@ -347,8 +365,8 @@ def weekly():
                 rows=parse_csv(csv_text)
                 with db() as c:
                     created=save_rows(c,rows)
-                flash(f'Saved weekly availability for {len(rows)} crew; created {created} new crew. Existing requests and assignments were preserved.','success')
-                return redirect(url_for('weekly'))
+                flash(f'Confirmed weekly availability for {len(rows)} crew; created {created} new crew.','success')
+                return redirect(url_for('dashboard',section='ta'))
             if request.form.get('action')=='review_grid':
                 csv_text=csv_from_grid(request.form)
             rows=parse_csv(csv_text)
@@ -361,15 +379,9 @@ def weekly():
         except (ValueError,UniqueViolation) as e:
             errors.append(str(e) if isinstance(e,ValueError) else 'A crew name already exists. Check the roster and preview again.')
     with db() as c:
-        stored=c.execute('''SELECT c.id,c.name,c.active,a.weekday,a.source_label
-            FROM crew c JOIN crew_weekly_availability a ON c.id=a.crew_id
-            ORDER BY c.name,a.weekday''').fetchall()
-    profiles={}
-    for item in stored:
-        profile=profiles.setdefault(item['id'],{'name':item['name'],'active':item['active'],'days':['Not recorded']*7})
-        profile['days'][item['weekday']]=item['source_label']
-    return render_template('weekly.html',section='weekly',selected_day=date.today().isoformat(),
+        people=c.execute('SELECT * FROM crew ORDER BY name').fetchall()
+    return render_template('weekly.html',section='crew',selected_day=date.today().isoformat(),
                            csrf=csrf,csv_text=csv_text,rows=rows,token=token,errors=errors,
-                           profiles=list(profiles.values()),days=DAYS,labels=LABELS)
+                           people=people,days=DAYS,labels=LABELS)
 
 if __name__=='__main__':app.run(debug=os.environ.get('FLASK_DEBUG')=='1',port=int(os.environ.get('PORT',5000)))
