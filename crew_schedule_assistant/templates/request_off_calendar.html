@@ -1,0 +1,27 @@
+<section class="panel section">
+<div class="off-calendar-heading">
+<div><h2>Request Off calendar</h2><p>Click a date to see its requests below. Pending requests are awaiting a manager's decision.</p></div>
+<div class="crew-row-actions"><span class="pill orange">Pending</span><span class="pill green">Approved</span></div>
+</div>
+<nav class="calendar-toolbar" aria-label="Calendar months">
+<a class="secondary" href="{{url_for('dashboard',section='overview',day=off_calendar.previous)}}" aria-label="Previous month">← Previous</a>
+<strong>{{off_calendar.title}}</strong>
+<a class="secondary" href="{{url_for('dashboard',section='overview',day=off_calendar.next)}}" aria-label="Next month">Next →</a>
+</nav>
+<div class="tablewrap off-calendar-scroll" tabindex="0" role="region" aria-label="Request Off calendar, scroll horizontally on smaller screens">
+<div class="off-calendar-grid">
+{% for weekday in weekday_names %}<div class="off-weekday">{{weekday}}</div>{% endfor %}
+{% for week in off_calendar.weeks %}{% for cell in week %}
+<div class="off-day {{'outside-month' if not cell.in_month else ''}} {{'selected-off-day' if cell.date==selected_day else ''}}">
+<a class="off-day-number" href="{{url_for('dashboard',section='overview',day=cell.date)}}" aria-label="View requests for {{cell.date}}" {% if cell.date==selected_day %}aria-current="date"{% endif %}>{{cell.number}}</a>
+<div class="off-day-events">
+{% for entry in cell.entries %}<div class="off-event {{'off-approved' if entry.status=='Approved' else 'off-pending'}}"><b>{{entry.name}}</b><span>{{entry.status}}</span></div>{% endfor %}
+</div>
+</div>
+{% endfor %}{% endfor %}
+</div></div>
+<div class="section"><h2>Request Off · {{selected_day}}</h2>
+{% for entry in off_calendar.selected %}<div class="off-selected-entry"><b>{{entry.name}}</b><span class="pill {{'green' if entry.status=='Approved' else 'orange'}}">{{entry.status}}</span></div>
+{% else %}<p>No pending or approved Request Off entries on this date.</p>{% endfor %}
+<a class="linkbutton" href="{{url_for('dashboard',section='requests',day=selected_day)}}">Review Request Off entries →</a></div>
+</section>

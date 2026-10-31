@@ -3,8 +3,8 @@
 <div class="heading">
   <div>
     <span class="eyebrow">MANAGER WORKSPACE</span>
-    <h1>{{ {'overview':'Dashboard','ta':'Time Arrangement','requests':'Request Off & Other Requests','crew':'Manage Crew','schedule':'Schedule','photos':'Schedule Photos'}[section] }}</h1>
-    <p>Review requests, catch consecutive-day risks, and find recommended crew for the next schedule.</p>
+    <h1>{{ {'overview':'Dashboard','ta':'Time Arrangement','ta_requests':'TA Requests','requests':'Request Off & Other Requests','crew':'Manage Crew','schedule':'Schedule','photos':'Schedule Photos'}[section] }}</h1>
+    <p>{{'See pending and approved Request Off entries in the calendar.' if section=='overview' else 'Manage crew availability, requests, and scheduling.'}}</p>
   </div>
   <form class="datepicker" method="get">
     <input type="hidden" name="section" value="{{section}}">
@@ -26,7 +26,8 @@
 {% endif %}
 
 {% endif %}
-{% if section in ('overview','schedule') %}
+{% if section=='overview' and off_calendar %}{% include 'request_off_calendar.html' %}{% endif %}
+{% if section=='schedule' %}
 <div class="two">
   <section class="panel">
     <div class="sectiontitle">
@@ -89,12 +90,12 @@
 </div>
 
 {% endif %}
-{% if section in ('requests','ta') %}
 {% if section=='ta' %}{% include 'confirmed_availability.html' %}{% endif %}
+{% if section in ('requests','ta_requests') %}
 <section class="panel section">
   <div class="sectiontitle">
     <div>
-      <h2>{{'TA Requests' if section=='ta' else 'Crew Requests'}}</h2>
+      <h2>{{'TA Requests' if section=='ta_requests' else 'Crew Requests'}}</h2>
       <p>Review each crew member's request. Approval does not automatically change assignments.</p>
     </div>
   </div>

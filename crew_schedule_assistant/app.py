@@ -1,4 +1,4 @@
-import os, uuid, secrets
+import os, uuid, secrets, calendar
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.errors import UniqueViolation
@@ -33,6 +33,22 @@ def weekly_profiles(connection):
         profile=profiles.setdefault(item['id'],{'name':item['name'],'active':item['active'],'days':['Not recorded']*7})
         profile['days'][item['weekday']]=item['source_label']
     return list(profiles.values())
+
+def request_off_calendar(target, requests):
+    selected=date.fromisoformat(target)
+    first=selected.replace(day=1)
+    previous=(first-timedelta(days=1)).replace(day=1)
+    following=(first.replace(day=28)+timedelta(days=4)).replace(day=1)
+    grouped={}
+    for entry in requests:
+        if entry['kind']=='Request Off' and entry['status'] in ('Pending','Approved') and iso_day(entry['day']):
+            grouped.setdefault(entry['day'],[]).append(entry)
+    weeks=[]
+    for week in calendar.Calendar(firstweekday=0).monthdatescalendar(first.year,first.month):
+        weeks.append([{'date':day.isoformat(),'number':day.day,'in_month':day.month==first.month,
+                       'entries':grouped.get(day.isoformat(),[])} for day in week])
+    return {'title':first.strftime('%B %Y'),'previous':previous.isoformat(),'next':following.isoformat(),
+            'weeks':weeks,'selected':grouped.get(target,[])}
 
 
 def init_db():
@@ -234,7 +250,7 @@ def logout():session.clear();return redirect(url_for('home'))
 @login_required
 def dashboard():
     section=request.args.get('section','overview')
-    if section not in ('overview','requests','ta','crew','schedule','photos'):
+    if section not in ('overview','requests','ta','ta_requests','crew','schedule','photos'):
         section='overview'
     if section=='crew':
         return redirect(url_for('weekly'))
@@ -248,9 +264,10 @@ def dashboard():
         choices=recommendations(c,target)
         count=c.execute("SELECT count(*) AS total FROM requests WHERE status='Pending'").fetchone()['total']
         profiles=weekly_profiles(c) if section=='ta' else []
-    if section in ('requests','ta'):
-        reqs=[r for r in reqs if (r['kind']=='Time Arrangement') == (section=='ta')]
-    return render_template('dashboard.html',section=section,people=people,assignments=assignments,requests=reqs,photos=photos,recommended=choices,selected_day=target,pending=count,alerts=[a for a in assignments if a['streak']>=6],profiles=profiles,days=DAYS)
+    off_calendar=request_off_calendar(target,reqs) if section=='overview' else None
+    if section in ('requests','ta_requests'):
+        reqs=[r for r in reqs if (r['kind']=='Time Arrangement') == (section=='ta_requests')]
+    return render_template('dashboard.html',section=section,people=people,assignments=assignments,requests=reqs,photos=photos,recommended=choices,selected_day=target,pending=count,alerts=[a for a in assignments if a['streak']>=6],profiles=profiles,days=DAYS,off_calendar=off_calendar)
 
 @app.post('/admin/crew')
 @login_required
@@ -339,7 +356,7 @@ def status(rid):
     if s in ('Approved','Rejected','Pending'):
         with db() as c:c.execute('UPDATE requests SET status=%s WHERE id=%s',(s,rid))
         flash('Request status updated. Remember to adjust the roster manually if needed.','success')
-    section='ta' if request.form.get('section')=='ta' else 'requests'
+    section='ta_requests' if request.form.get('section') in ('ta','ta_requests') else 'requests'
     return redirect(url_for('dashboard',section=section))
 
 @app.post('/admin/upload')

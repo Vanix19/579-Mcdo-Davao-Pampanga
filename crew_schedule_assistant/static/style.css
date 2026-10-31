@@ -68,6 +68,18 @@ table{width:100%;border-collapse:collapse;text-align:left}th{font-size:11px;colo
 @media(max-width:470px){.metrics{gap:9px}.metric{padding:13px}.metric strong{font-size:27px}.datepicker{flex-wrap:wrap}.nav a:not(.brand),.navbutton{font-size:11px}.nav nav{gap:8px}.brand{font-size:20px}.brand-text{gap:6px}.gallery{grid-template-columns:1fr 1fr}}
 
 .unmatched-crew{color:#b91c1c!important;font-weight:700;}
+.off-calendar-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.off-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-width:700px;border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.off-weekday{padding:12px 6px;text-align:center;background:var(--soft);font-weight:800;font-size:12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.off-day{padding:8px;min-height:130px;min-width:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.outside-month{background:#f6f3ee}.selected-off-day{box-shadow:inset 0 0 0 2px var(--mcdo-red)}
+.off-day-number{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;text-decoration:none;font-weight:800}
+.off-day-number[aria-current=date]{background:var(--mcdo-red);color:white}
+.off-day-events{max-height:155px;overflow:auto}
+.off-event{padding:7px;border-radius:7px;margin-top:5px;overflow-wrap:anywhere;font-size:11px}.off-event b,.off-event span{display:block}
+.off-approved{background:#e4f7ea;color:#0e7044}.off-pending{background:#fff0c8;color:#805400}
+.off-selected-entry{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.off-calendar-scroll{margin-top:12px}.calendar-toolbar a{text-decoration:none}
 .crew-row-actions{display:flex;align-items:center;flex-wrap:wrap;gap:18px}.crew-row-actions form{margin:0}.crew-row-actions a.linkbutton{text-decoration:none}
 .crew-edit-panel{max-width:650px}.crew-edit-panel .stack{margin-top:18px}
 .crew-review-wrap{max-width:100%;max-height:70vh;overflow:auto;scrollbar-gutter:stable;border:1px solid var(--line);border-radius:12px}
